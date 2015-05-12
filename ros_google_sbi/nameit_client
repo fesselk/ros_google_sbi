@@ -1,0 +1,95 @@
+#!/usr/bin/python
+
+import sys
+import os
+
+#rosimports
+import rospy
+from sensor_msgs.msg import CompressedImage
+from ros_google_sbi.srv import *
+
+def whatisthis(img, hint=None):
+    '''puts the imagedata into an ros service reques and sends the request'''
+    rospy.wait_for_service('nameit')
+    try:
+      imc=CompressedImage()
+      imc.header.seq = 0
+      imc.header.stamp = rospy.Time.now()
+      #frame_id is a lie 
+      imc.header.frame_id = "tralala"
+      #format maybe a lie 
+      imc.format="png"
+      imc.data=img
+      if hint==None:
+        hint=""
+      nameit = rospy.ServiceProxy('nameit', NameItGoogle)
+      ret = nameit( compimg=imc, hint=hint).ret
+      return ret
+    except rospy.ServiceException, e:
+      print "Service call failed: %s"%e
+
+def main(argv):
+    ''' snapshots if requested and loads a picture and sends a request to ros nameit'''
+    
+    rospy.init_node('nameitclient')
+    
+    import argparse
+    parser = argparse.ArgumentParser(description='Take Pictures and ask Google to name them')
+    parser.add_argument('-s', '--snap', action='store_true', help='take a snapshot')
+    parser.add_argument('-c', '--cam', nargs='?', type=int, help='use cam Number N defaults to 0', default=0)
+    parser.add_argument('-a', '--hint', nargs='?', type=str, help='give an interpretation hint', default=None)
+    parser.add_argument('NAME', nargs='?', help='Filename defaults to snap.jpg', default="snap.jpg")
+    cmdline_args = parser.parse_args(sys.argv[1:]) #cut the program-name off the list 
+
+    picture_file=cmdline_args.NAME
+    
+    if cmdline_args.snap:
+      from snapshot import snapshot
+      snapshot(picture_file,cmdline_args.cam)
+    
+    if not os.path.exists(picture_file):
+      print "missing " + picture_file + " you may want to capture it using -s (-h for Help)"
+      sys.exit(-1)
+    
+    
+    
+    imgbuff = open(picture_file)
+    img=imgbuff.read()
+    description = whatisthis(img,cmdline_args.hint)
+    imgbuff.close()
+    
+    for j in [description.tags, description.words, description.bigrams]:
+      for i in j:
+        print i
+      print "" , len(j),  "################################################################"
+    
+    #plot some pie diagrams
+    
+    import matplotlib.pyplot as plt
+    
+    sizes=[]
+    labels=[]
+    
+    for i in description.words:
+      labels.append(i.word.decode('utf8').encode('ascii',errors='ignore'))
+      sizes.append(i.occurence)
+    
+    plt.subplot(2, 1, 1)
+    plt.pie(sizes, labels=labels)
+    plt.axis('equal')
+    
+    sizes=[]
+    labels=[]
+    
+    for i in description.bigrams:
+      labels.append(i.word.decode('utf8').encode('ascii',errors='ignore'))
+      sizes.append(i.occurence)
+    
+    plt.subplot(2, 1, 2)
+    plt.pie(sizes, labels=labels)
+    plt.axis('equal')
+    
+    plt.show()
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv)) 

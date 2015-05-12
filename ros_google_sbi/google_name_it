@@ -1,0 +1,47 @@
+#! /usr/bin/env python
+'''creates a nameit service for ROS using google_sbi_tag_it.py'''
+import google_sbi_tagit
+#rosimports
+import rospy
+from sensor_msgs.msg import CompressedImage
+from ros_google_sbi.msg import *
+from ros_google_sbi.srv import *
+
+def nameitgoogle(req):
+  '''translates the ros nameit service call to a call to google_sbi_tagit.nameit()'''
+  ret = DescriptionTags()
+  
+  google_sbi_tagit.config = {"stopwordfilter":rospy.get_param('~stopwordfilter',True),
+                             "Nimgres":rospy.get_param('~Nimgres',100),
+                             "NThreads":rospy.get_param('~NThreads',6),
+                             "NTop":rospy.get_param('~NTop',10)}
+  
+  if req.hint=="":
+    req.hint=None
+  
+  rospy.loginfo(str(google_sbi_tagit.config))
+  tags, words, bigrams = google_sbi_tagit.nameit(req.compimg.data,req.hint)
+  
+  for i in tags:
+    ret.tags.append(i)
+  
+  for i in words:
+    word,n = i
+    ret.words.append(WordOccurrence(word,n))
+  
+  for i in bigrams:
+    word,n = i
+    ret.bigrams.append(WordOccurrence(word,n))
+  
+  return ret
+
+def init():
+  '''initializes a rosnode providing the nameit service'''
+
+  rospy.init_node('RosGoogleSbi')
+  s = rospy.Service('nameit', NameItGoogle, nameitgoogle)
+  print "Ready to tag Things"
+  rospy.spin()
+
+if __name__ == "__main__":
+  init()
