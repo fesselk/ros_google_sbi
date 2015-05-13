@@ -38,6 +38,7 @@ def main(argv):
     parser.add_argument('-s', '--snap', action='store_true', help='take a snapshot')
     parser.add_argument('-c', '--cam', nargs='?', type=int, help='use cam Number N defaults to 0', default=0)
     parser.add_argument('-a', '--hint', nargs='?', type=str, help='give an interpretation hint', default=None)
+    parser.add_argument('-p', '--piechart', action='store_true', help='draw a piechart', default=None)
     parser.add_argument('NAME', nargs='?', help='Filename defaults to snap.jpg', default="snap.jpg")
     cmdline_args = parser.parse_args(sys.argv[1:]) #cut the program-name off the list 
 
@@ -64,32 +65,23 @@ def main(argv):
       print "" , len(j),  "################################################################"
     
     #plot some pie diagrams
-    
-    import matplotlib.pyplot as plt
-    
-    sizes=[]
-    labels=[]
-    
-    for i in description.words:
-      labels.append(i.word.decode('utf8').encode('ascii',errors='ignore'))
-      sizes.append(i.occurence)
-    
-    plt.subplot(2, 1, 1)
-    plt.pie(sizes, labels=labels)
-    plt.axis('equal')
-    
-    sizes=[]
-    labels=[]
-    
-    for i in description.bigrams:
-      labels.append(i.word.decode('utf8').encode('ascii',errors='ignore'))
-      sizes.append(i.occurence)
-    
-    plt.subplot(2, 1, 2)
-    plt.pie(sizes, labels=labels)
-    plt.axis('equal')
-    
-    plt.show()
+    if cmdline_args.piechart:
+      import matplotlib.pyplot as plt
+      def pie( occurencelist ):
+        sizes=[]
+        labels=[]
+        for i in occurencelist:
+          labels.append(i.word.decode('utf8').encode('ascii',errors='ignore'))
+          sizes.append(i.occurence)
+        plt.pie(sizes, labels=labels)
+        plt.axis('equal')
+      
+      plt.subplot(2, 1, 1)
+      pie(description.words)
+      plt.subplot(2, 1, 2)
+      pie(description.bigrams)
+      
+      plt.show()
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv)) 
