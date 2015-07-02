@@ -40,7 +40,7 @@ def main(argv):
     parser.add_argument('-a', '--hint', nargs='?', type=str, help='give an interpretation hint', default=None)
     parser.add_argument('-p', '--piechart', action='store_true', help='draw a piechart', default=None)
     parser.add_argument('NAME', nargs='?', help='Filename defaults to snap.jpg', default="snap.jpg")
-    cmdline_args = parser.parse_args(sys.argv[1:]) #cut the program-name off the list 
+    cmdline_args = parser.parse_args(sys.argv[1:]) #cut the program-name off the list
 
     picture_file=cmdline_args.NAME
     
@@ -59,9 +59,18 @@ def main(argv):
     description = whatisthis(img,cmdline_args.hint)
     imgbuff.close()
     
-    for j in [description.tags, description.words, description.bigrams]:
+    #for j in [description.tags, description.words, description.bigrams]:
+    #  for i in j:
+    #    print i
+    #  print "" , len(j),  "################################################################"
+
+    for i in description.tags:
+	print i, " ",
+    print "" , len(description.tags),  "################################################################"
+    
+    for j in [ description.words, description.bigrams]:
       for i in j:
-        print i
+        print i.word ,":", i.occurence
       print "" , len(j),  "################################################################"
     
     #plot some pie diagrams

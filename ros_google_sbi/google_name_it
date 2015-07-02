@@ -34,14 +34,19 @@ def nameitgoogle(req):
     ret.bigrams.append(WordOccurrence(word,n))
   
   return ret
+  
+def bob(event):
+  print 'Timer called at ' + str(event.current_real)
 
 def init():
   '''initializes a rosnode providing the nameit service'''
 
   rospy.init_node('RosGoogleSbi')
   s = rospy.Service('nameit', NameItGoogle, nameitgoogle)
+  rospy.Timer(rospy.Duration(2),bob)
   print "Ready to tag Things"
   rospy.spin()
+  print "terminator"
 
 if __name__ == "__main__":
   init()
