@@ -32,19 +32,29 @@ def nameitgoogle(req):
     ret.bigrams.append(WordOccurrence(word,n))
   
   return ret
-  
-def bob(event):
-  print 'Timer called at ' + str(event.current_real)
+
+def serv_error(exception, exception_type, exception_value, traceback):
+   rospy.logerr(" ".join(('Service error', str(exception),str(exception_type),str(exception_value),str(traceback))))
+
+def serviceWatchdog( name, service, time ):
+  def checkService(event):
+    try:
+      rospy.wait_for_service(name, time/2)
+    except:
+      rospy.logwarn( " ".join(("Service", name, "is not availible shut it down")) )
+      service.shutdown()
+  rospy.Timer(rospy.Duration(time/2),checkService)
 
 def init():
   '''initializes a rosnode providing the nameit service'''
-
+  name='nameit'
   rospy.init_node('RosGoogleSbi')
-  s = rospy.Service('nameit', NameItGoogle, nameitgoogle)
-  rospy.Timer(rospy.Duration(2),bob)
-  print "Ready to tag Things"
-  rospy.spin()
-  print "terminator"
+  while 1:
+    service = rospy.Service(name, NameItGoogle, nameitgoogle,error_handler=serv_error)
+    serviceWatchdog(name, service, 4)
+    rospy.loginfo( " ".join((name,"is ready to tag ")) )
+    service.spin()
+  rospy.loginfo( " ".join((name,"terminated")) )
 
 if __name__ == "__main__":
   init()
