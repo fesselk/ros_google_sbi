@@ -26,7 +26,7 @@ def whatisthis(img, hint=None):
       ret = nameit( compimg=imc, hint=hint).ret
       return ret
     except rospy.ServiceException, e:
-      print "Service call failed: %s"%e
+      rospy.info("Service call failed: %s"%e)
 
 def main(argv):
     ''' snapshots if requested and loads a picture and sends a request to ros nameit'''
@@ -65,7 +65,7 @@ def main(argv):
     #  print "" , len(j),  "################################################################"
 
     for i in description.tags:
-	print i, " ",
+	print i, " "
     print "" , len(description.tags),  "################################################################"
     
     for j in [ description.words, description.bigrams]:

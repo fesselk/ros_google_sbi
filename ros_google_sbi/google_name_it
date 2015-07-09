@@ -25,12 +25,10 @@ def nameitgoogle(req):
   for i in tags:
     ret.tags.append(i)
   
-  for i in words:
-    word,n = i
+  for word,n in words:
     ret.words.append(WordOccurrence(word,n))
   
-  for i in bigrams:
-    word,n = i
+  for word,n in bigrams:
     ret.bigrams.append(WordOccurrence(word,n))
   
   return ret
